@@ -1,0 +1,24 @@
+grpc:
+  port: 8085
+
+logging:
+  path: logs
+  level: DEBUG
+  level.org.hibernate: DEBUG
+  level.com.sychev: DEBUG
+
+spring:
+  application:
+    name: auth
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: "jdbc:postgresql://localhost:5432/db_auth"
+    username: a.sychev
+    password: "Ujkjcjdfzgjxnf8"
+
+jpa:
+  show-sql: true
+  properties:
+    hibernate:
+      temp:
+        use_jdbc_metadata_defaults: false
