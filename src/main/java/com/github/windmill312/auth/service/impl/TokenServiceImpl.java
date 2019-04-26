@@ -1,5 +1,6 @@
 package com.github.windmill312.auth.service.impl;
 
+import com.github.windmill312.auth.model.TokenType;
 import com.github.windmill312.auth.model.entity.TokenEntity;
 import com.github.windmill312.auth.repository.TokenRepository;
 import com.github.windmill312.auth.service.TokenService;
@@ -40,14 +41,14 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public Optional<TokenEntity> getToken(String token) {
+    public Optional<TokenEntity> getTokenByPrincipalAndType(String token) {
         return tokenRepository.findByValue(token);
     }
 
     //todo add token type
     @Override
-    public Optional<TokenEntity> getToken(UUID principalExtId) {
-        return tokenRepository.findByPrincipalExtId(principalExtId);
+    public Optional<TokenEntity> getTokenByPrincipalAndType(UUID principalExtId, TokenType type) {
+        return tokenRepository.findByPrincipalExtIdAndTokenType(principalExtId, type);
     }
 
     @Override

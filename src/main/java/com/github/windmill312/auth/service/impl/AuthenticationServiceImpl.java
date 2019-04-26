@@ -2,6 +2,9 @@ package com.github.windmill312.auth.service.impl;
 
 import com.github.windmill312.auth.exception.AuthException;
 import com.github.windmill312.auth.model.Authentication;
+import com.github.windmill312.auth.model.FullAuthentication;
+import com.github.windmill312.auth.model.Subsystem;
+import com.github.windmill312.auth.model.TokenType;
 import com.github.windmill312.auth.model.entity.PrincipalEntity;
 import com.github.windmill312.auth.model.entity.TokenEntity;
 import com.github.windmill312.auth.service.AuthenticationService;
@@ -14,11 +17,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    Logger log = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+    private Logger log = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
     private static final long TOKEN_INACTION_MAX_SECONDS = 1800L;
 
@@ -35,33 +39,55 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.credentialsService = credentialsService;
     }
 
-    //todo create enum with subsystemCodes
     @Override
-    public Authentication authenticateAny(PrincipalEntity principal) {
-        if (principal.getSubsystemId() != 4) {
+    public FullAuthentication authenticateAny(PrincipalEntity principal) {
+        if (principal.getSubsystemId() != Subsystem.EXTERNAL_SERVICE.getId()) {
             Instant now = Instant.now();
 
-            TokenEntity token = tokenService.getToken(principal.getExtId()).orElse(tokenService.generateToken());
+            TokenEntity accessToken = tokenService.getTokenByPrincipalAndType(principal.getExtId(), TokenType.ACCESS)
+                    .orElse(tokenService.generateToken());
 
-            if (token.getValidTill().compareTo(now) < 0) {
-                tokenService.revokeToken(token);
-                token = tokenService.generateToken();
+            if (accessToken.getValidTill().compareTo(now) < 0) {
+                tokenService.revokeToken(accessToken);
+                accessToken = tokenService.generateToken();
             } else {
-                token.setLastAccess(Instant.now());
+                accessToken.setLastAccess(Instant.now());
             }
 
-            token.setPrincipalExtId(principal.getExtId());
-            tokenService.saveToken(token);
+            accessToken.setPrincipalExtId(principal.getExtId());
+            accessToken.setTokenType(TokenType.ACCESS);
+            tokenService.saveToken(accessToken);
 
-            return new Authentication(token, principal);
+            TokenEntity refreshToken = tokenService.getTokenByPrincipalAndType(principal.getExtId(), TokenType.REFRESH)
+                    .orElse(
+                        tokenService.generateToken()
+                            .setValue(generateRefreshToken()));
+
+            if (refreshToken.getValidTill().compareTo(now) < 0) {
+                tokenService.revokeToken(refreshToken);
+                refreshToken = new TokenEntity()
+                        .setValue(generateRefreshToken());
+            } else {
+                refreshToken.setLastAccess(Instant.now());
+            }
+
+            refreshToken.setPrincipalExtId(principal.getExtId());
+            refreshToken.setTokenType(TokenType.REFRESH);
+            tokenService.saveToken(refreshToken);
+
+            return new FullAuthentication(accessToken, refreshToken, principal);
         } else {
             throw new AuthException("Insufficient permissions");
         }
 
     }
 
+    private String generateRefreshToken() {
+        return UUID.randomUUID().toString() + UUID.randomUUID().toString();
+    }
+
     @Override
-    public Authentication authenticateService(String serviceId, String serviceSecret) {
+    public FullAuthentication authenticateService(String serviceId, String serviceSecret) {
         PrincipalEntity principal = credentialsService.getPrincipal(serviceId, serviceSecret);
 
         return authenticateAny(principal);
@@ -73,7 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AuthException("Incorrect token");
         }
 
-        TokenEntity tokenEntity = tokenService.getToken(token).orElseThrow(() -> {
+        TokenEntity tokenEntity = tokenService.getTokenByPrincipalAndType(token).orElseThrow(() -> {
             log.info("Incorrect token");
             return new AuthException("Incorrect token");
         });
@@ -89,7 +115,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void revokeAuthentication(String token) {
-        TokenEntity authTokenEntity = tokenService.getToken(token).orElseThrow(() -> {
+        TokenEntity authTokenEntity = tokenService.getTokenByPrincipalAndType(token).orElseThrow(() -> {
             log.info("Incorrect token");
             return new AuthException("Incorrect token");
         });

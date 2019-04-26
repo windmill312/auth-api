@@ -1,5 +1,6 @@
 package com.github.windmill312.auth.service;
 
+import com.github.windmill312.auth.model.TokenType;
 import com.github.windmill312.auth.model.entity.TokenEntity;
 
 import java.util.Optional;
@@ -10,9 +11,9 @@ public interface TokenService {
 
     TokenEntity generateToken(long tokenTtlSeconds);
 
-    Optional<TokenEntity> getToken(String token);
+    Optional<TokenEntity> getTokenByPrincipalAndType(String token);
 
-    Optional<TokenEntity> getToken(UUID principalExtId);
+    Optional<TokenEntity> getTokenByPrincipalAndType(UUID principalExtId, TokenType type);
 
     void saveToken(TokenEntity token);
 

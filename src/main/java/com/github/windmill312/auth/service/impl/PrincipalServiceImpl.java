@@ -3,6 +3,7 @@ package com.github.windmill312.auth.service.impl;
 import com.github.windmill312.auth.converter.ModelConverter;
 import com.github.windmill312.auth.exception.AuthException;
 import com.github.windmill312.auth.model.PrincipalOuterKey;
+import com.github.windmill312.auth.model.Subsystem;
 import com.github.windmill312.auth.model.entity.GrantEntity;
 import com.github.windmill312.auth.model.entity.PrincipalEntity;
 import com.github.windmill312.auth.repository.CredentialsRepository;
@@ -70,9 +71,9 @@ public class PrincipalServiceImpl implements PrincipalService {
 
         principalRepository.save(principal);
 
-        //TODO refactor
+
         Grants grant;
-        if (subsystemCode.equals(40)) {
+        if (subsystemCode.equals(Subsystem.EXTERNAL_SERVICE.getCode())) {
             grant = Grants.OAUTH_GRANT;
         }
         else

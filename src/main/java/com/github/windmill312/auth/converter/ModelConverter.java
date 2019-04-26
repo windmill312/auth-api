@@ -2,9 +2,11 @@ package com.github.windmill312.auth.converter;
 
 import com.github.windmill312.auth.grpc.model.v1.GAuthentication;
 import com.github.windmill312.auth.grpc.model.v1.GCredentials;
+import com.github.windmill312.auth.grpc.model.v1.GFullAuthentication;
 import com.github.windmill312.auth.grpc.model.v1.GPrincipalOuterKey;
 import com.github.windmill312.auth.grpc.model.v1.GToken;
 import com.github.windmill312.auth.model.Authentication;
+import com.github.windmill312.auth.model.FullAuthentication;
 import com.github.windmill312.auth.model.PrincipalOuterKey;
 import com.github.windmill312.auth.model.entity.CredentialsEntity;
 import com.github.windmill312.auth.model.entity.PrincipalEntity;
@@ -15,10 +17,17 @@ import java.time.Instant;
 import java.util.UUID;
 
 public class ModelConverter {
+    public static GFullAuthentication convert(FullAuthentication authentication) {
+        return GFullAuthentication.newBuilder()
+                .setAccessToken(convert(authentication.getAccessToken()))
+                .setRefreshToken(authentication.getRefreshToken().getValue())
+                .setPrincipal(convert(convert(authentication.getPrincipal(), authentication.getPrincipal().getSubsystemId())))
+                .build();
+    }
 
     public static GAuthentication convert(Authentication authentication) {
         return GAuthentication.newBuilder()
-                .setToken(convert(authentication.getTokenEntity()))
+                .setToken(convert(authentication.getAccessToken()))
                 .setPrincipal(convert(convert(authentication.getPrincipal(), authentication.getPrincipal().getSubsystemId())))
                 .build();
     }

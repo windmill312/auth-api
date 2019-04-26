@@ -12,6 +12,7 @@ import com.github.windmill312.auth.grpc.model.v1.GGetAuthenticationResponse;
 import com.github.windmill312.auth.grpc.model.v1.GRevokeAuthenticationRequest;
 import com.github.windmill312.auth.grpc.service.v1.AuthServiceV1Grpc;
 import com.github.windmill312.auth.model.Authentication;
+import com.github.windmill312.auth.model.FullAuthentication;
 import com.github.windmill312.auth.model.entity.PrincipalEntity;
 import com.github.windmill312.auth.security.Grants;
 import com.github.windmill312.auth.service.AccessService;
@@ -56,7 +57,7 @@ public class AuthServiceV1GrpcImpl extends AuthServiceV1Grpc.AuthServiceV1ImplBa
 
         PrincipalEntity entity = principalService.getPrincipalByExternalId(UUID.fromString(request.getPrincipalKey().getExtId()));
 
-        Authentication authentication = authenticationService.authenticateAny(entity);
+        FullAuthentication authentication = authenticationService.authenticateAny(entity);
 
         GAuthenticateAnyResponse response = GAuthenticateAnyResponse.newBuilder()
                 .setAuthentication(ModelConverter.convert(authentication))
@@ -71,7 +72,7 @@ public class AuthServiceV1GrpcImpl extends AuthServiceV1Grpc.AuthServiceV1ImplBa
             GAuthenticateServiceRequest request,
             StreamObserver<GAuthenticateServiceResponse> responseObserver) {
 
-        Authentication authentication = authenticationService.authenticateService(
+        FullAuthentication authentication = authenticationService.authenticateService(
                 request.getServiceId(),
                 request.getServiceSecret());
 

@@ -2,7 +2,9 @@ package com.github.windmill312.auth.service.impl;
 
 import com.github.windmill312.auth.exception.AuthException;
 import com.github.windmill312.auth.model.Authentication;
+import com.github.windmill312.auth.model.FullAuthentication;
 import com.github.windmill312.auth.model.OAuthToken;
+import com.github.windmill312.auth.model.Subsystem;
 import com.github.windmill312.auth.model.entity.OAuthCode;
 import com.github.windmill312.auth.model.entity.OAuthRefreshToken;
 import com.github.windmill312.auth.model.entity.PrincipalEntity;
@@ -54,7 +56,7 @@ public class OAuthServiceImpl implements OAuthService {
     @Override
     public String authorize(String clientId, String userAccessToken) {
 
-        if (principalService.getPrincipalByExternalId(UUID.fromString(clientId)).getSubsystemId() != 4)
+        if (principalService.getPrincipalByExternalId(UUID.fromString(clientId)).getSubsystemId() != Subsystem.EXTERNAL_SERVICE.getId())
             throw new AuthException("Client has no oauth permissions");
 
         OAuthCode oAuthCode = new OAuthCode()
@@ -78,7 +80,7 @@ public class OAuthServiceImpl implements OAuthService {
             throw new AuthException("Authorization code expired");
         }
 
-        TokenEntity token = tokenService.getToken(code.getUserAccessToken()).orElseThrow(() -> {
+        TokenEntity token = tokenService.getTokenByPrincipalAndType(code.getUserAccessToken()).orElseThrow(() -> {
             log.info("Incorrect token");
             return new AuthException("Incorrect token");
         });
@@ -109,7 +111,7 @@ public class OAuthServiceImpl implements OAuthService {
 
         PrincipalEntity principal = principalService.getPrincipalByExternalId(oAuthRefreshToken.getPrincipalId());
 
-        Authentication authentication = authenticationService.authenticateAny(principal);
+        FullAuthentication authentication = authenticationService.authenticateAny(principal);
 
         oAuthRefreshTokenRepository.deleteByPrincipalIdAndClientId(principal.getExtId(), clientId);
 
@@ -117,9 +119,9 @@ public class OAuthServiceImpl implements OAuthService {
         oAuthRefreshTokenRepository.save(newRefreshToken);
 
         return new OAuthToken()
-                .setAccessToken(authentication.getTokenEntity().getValue())
+                .setAccessToken(authentication.getAccessToken().getValue())
                 .setTokenType("Bearer")
-                .setExpiresIn(authentication.getTokenEntity().getValidTill())
+                .setExpiresIn(authentication.getAccessToken().getValidTill())
                 .setRefreshToken(newRefreshToken.getRefreshToken());
     }
 
