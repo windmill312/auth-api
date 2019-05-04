@@ -15,7 +15,11 @@ public interface TokenService {
 
     Optional<TokenEntity> getTokenByPrincipalAndType(UUID principalExtId, TokenType type);
 
+    Optional<TokenEntity> getTokenByPrincipalAndTypeAndValue(UUID principalExtId, TokenType type, String value);
+
     void saveToken(TokenEntity token);
 
     void revokeToken(TokenEntity token);
+
+    void revokeTokensByPrincipal(UUID principalExtId);
 }

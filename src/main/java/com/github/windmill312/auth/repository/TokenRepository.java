@@ -13,4 +13,8 @@ public interface TokenRepository extends JpaRepository<TokenEntity, Integer> {
     Optional<TokenEntity> findByValue(String value);
 
     Optional<TokenEntity> findByPrincipalExtIdAndTokenType(UUID principalExtId, TokenType type);
+
+    Optional<TokenEntity> findByPrincipalExtIdAndTokenTypeAndValue(UUID principalExtId, TokenType type, String value);
+
+    void deleteAllByPrincipalExtId(UUID principalExtId);
 }

@@ -122,6 +122,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         tokenService.revokeToken(authTokenEntity);
     }
 
+    @Override
+    public FullAuthentication refreshToken(PrincipalEntity principal, TokenEntity token) {
+        if (StringUtils.isEmpty(token.getValue())) {
+            throw new AuthException("Incorrect token");
+        }
+
+        tokenService.revokeTokensByPrincipal(principal.getExtId());
+
+        return authenticateAny(principal);
+    }
+
     private void validateToken(TokenEntity tokenEntity) {
         Instant now = Instant.now();
 

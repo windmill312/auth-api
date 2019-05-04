@@ -5,11 +5,14 @@ import com.github.windmill312.auth.grpc.model.v1.GAuthenticateAnyRequest;
 import com.github.windmill312.auth.grpc.model.v1.GAuthenticateAnyResponse;
 import com.github.windmill312.auth.grpc.model.v1.GAuthenticateServiceRequest;
 import com.github.windmill312.auth.grpc.model.v1.GAuthenticateServiceResponse;
+import com.github.windmill312.auth.grpc.model.v1.GAuthentication;
+import com.github.windmill312.auth.grpc.model.v1.GFullAuthentication;
 import com.github.windmill312.auth.grpc.model.v1.GGenerateTokenRequest;
 import com.github.windmill312.auth.grpc.model.v1.GGenerateTokenResponse;
 import com.github.windmill312.auth.grpc.model.v1.GGetAuthenticationRequest;
 import com.github.windmill312.auth.grpc.model.v1.GGetAuthenticationResponse;
 import com.github.windmill312.auth.grpc.model.v1.GRevokeAuthenticationRequest;
+import com.github.windmill312.auth.grpc.model.v1.GUpdateTokenRequest;
 import com.github.windmill312.auth.grpc.service.v1.AuthServiceV1Grpc;
 import com.github.windmill312.auth.model.Authentication;
 import com.github.windmill312.auth.model.FullAuthentication;
@@ -133,5 +136,28 @@ public class AuthServiceV1GrpcImpl extends AuthServiceV1Grpc.AuthServiceV1ImplBa
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void updateToken(
+            GUpdateTokenRequest request,
+            StreamObserver<GAuthenticateAnyResponse> responseObserver) {
+        accessService.checkAccess(
+                ModelConverter.toToken(request.getAuthentication()),
+                Grants.AUTHORIZATION_GRANT.getValue());
+
+        PrincipalEntity principal = principalService.getPrincipalByExternalId(UUID.fromString(request.getPrincipalKey().getExtId()));
+
+        FullAuthentication authentication = authenticationService.refreshToken(
+                principal,
+                ModelConverter.convert(request.getToken()));
+
+        GAuthenticateAnyResponse response = GAuthenticateAnyResponse.newBuilder()
+                .setAuthentication(ModelConverter.convert(authentication))
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
     }
 }

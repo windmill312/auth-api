@@ -7,11 +7,13 @@ import com.github.windmill312.auth.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+@Transactional
 @Service
 public class TokenServiceImpl implements TokenService {
 
@@ -52,6 +54,11 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public Optional<TokenEntity> getTokenByPrincipalAndTypeAndValue(UUID principalExtId, TokenType type, String value) {
+        return tokenRepository.findByPrincipalExtIdAndTokenTypeAndValue(principalExtId, type, value);
+    }
+
+    @Override
     public void saveToken(TokenEntity token) {
         tokenRepository.save(token);
     }
@@ -59,5 +66,10 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void revokeToken(TokenEntity token) {
         tokenRepository.delete(token);
+    }
+
+    @Override
+    public void revokeTokensByPrincipal(UUID principalExtId) {
+        tokenRepository.deleteAllByPrincipalExtId(principalExtId);
     }
 }
