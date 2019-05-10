@@ -54,14 +54,14 @@ public class OAuthServiceImpl implements OAuthService {
     }
 
     @Override
-    public String authorize(String clientId, String userAccessToken) {
+    public String authorize(UUID clientUid, String userAccessToken) {
 
-        if (principalService.getPrincipalByExternalId(UUID.fromString(clientId)).getSubsystemId() != Subsystem.EXTERNAL_SERVICE.getId())
+        if (principalService.getPrincipalByExternalId(clientUid).getSubsystemId() != Subsystem.EXTERNAL_SERVICE.getId())
             throw new AuthException("Client has no oauth permissions");
 
         OAuthCode oAuthCode = new OAuthCode()
                 .setExpiresIn(Instant.now().plusSeconds(getDefaultCodeTtlSeconds()))
-                .setClientId(clientId)
+                .setClientId(clientUid)
                 .setUserAccessToken(userAccessToken);
 
         oAuthCodeRepository.save(oAuthCode);
@@ -70,10 +70,10 @@ public class OAuthServiceImpl implements OAuthService {
     }
 
     @Override
-    public OAuthToken getToken(String clientId, String clientSecret, String authorizationCode) {
-        credentialsService.getPrincipal(clientId, clientSecret);
+    public OAuthToken getToken(String clientIdentifier, String clientSecret, String authorizationCode) {
+        PrincipalEntity principal = credentialsService.getPrincipal(clientIdentifier, clientSecret);
 
-        OAuthCode code = oAuthCodeRepository.findByClientIdAndCode(clientId, authorizationCode)
+        OAuthCode code = oAuthCodeRepository.findByClientIdAndCode(principal.getExtId(), authorizationCode)
                 .orElseThrow(() -> new AuthException("Wrong authorization code"));
 
         if (code.getExpiresIn().compareTo(Instant.now()) < 0) {
@@ -85,7 +85,7 @@ public class OAuthServiceImpl implements OAuthService {
             return new AuthException("Incorrect token");
         });
 
-        OAuthRefreshToken refreshToken = generateRefreshToken(clientId, token.getPrincipalExtId());
+        OAuthRefreshToken refreshToken = generateRefreshToken(clientIdentifier, token.getPrincipalExtId());
         oAuthRefreshTokenRepository.save(refreshToken);
 
         oAuthCodeRepository.delete(code);

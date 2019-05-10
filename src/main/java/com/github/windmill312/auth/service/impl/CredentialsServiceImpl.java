@@ -52,7 +52,7 @@ public class CredentialsServiceImpl implements CredentialsService {
     public void addCredentials(PrincipalOuterKey principalKey, String identifier, String secret) {
         if (!credentialsRepository.existsByIdentifier(identifier)) {
             SubsystemEntity subsystem = subsystemRepository.findByCode(principalKey.getSubsystemCode()).orElseThrow(() -> {
-                log.info("Subsystem not found with code: {}", principalKey.getSubsystemCode());
+                log.warn("Subsystem not found with code: {}", principalKey.getSubsystemCode());
                 return new AuthException("Subsystem not found with code: " + principalKey.getSubsystemCode());
             });
 
@@ -65,6 +65,14 @@ public class CredentialsServiceImpl implements CredentialsService {
                     .setSecret(passwordEncoder.encode(secret)));
         } else
             throw new DuplicateException("Such identifier is already exists");
+    }
+
+    @Override
+    public CredentialsEntity getCredentials(PrincipalEntity principal) {
+        return credentialsRepository.findByPrincipalExtId(principal.getExtId()).orElseThrow( () -> {
+            log.warn("Credentials not found by principal with uid: {}", principal.getExtId());
+            return new AuthException("Credentials not found by principal with uid: {} " + principal.getExtId());
+        });
     }
 
     @Bean

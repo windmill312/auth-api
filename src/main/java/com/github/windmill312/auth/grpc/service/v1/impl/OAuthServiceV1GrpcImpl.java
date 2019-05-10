@@ -11,6 +11,8 @@ import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.UUID;
+
 @GRpcService
 public class OAuthServiceV1GrpcImpl extends OAuthServiceV1Grpc.OAuthServiceV1ImplBase {
 
@@ -35,7 +37,7 @@ public class OAuthServiceV1GrpcImpl extends OAuthServiceV1Grpc.OAuthServiceV1Imp
                 ModelConverter.toToken(request.getAuthentication()),
                 Grants.OAUTH_GRANT.getValue());
 
-        String authorizationCode = oAuthService.authorize(request.getClientId(), request.getUserAccessToken());
+        String authorizationCode = oAuthService.authorize(UUID.fromString(request.getClientId()), request.getUserAccessToken());
 
         GOAuthAuthorizeResponse response = GOAuthAuthorizeResponse.newBuilder()
                 .setAuthorizationCode(authorizationCode)

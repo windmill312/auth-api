@@ -55,6 +55,10 @@ public class ModelConverter {
                 .build();
     }
 
+    public static UUID convert(GUuid uuid) {
+        return UUID.fromString(uuid.getUuid());
+    }
+
     public static GToken convert(TokenEntity token) {
         return GToken.newBuilder()
                 .setToken(token.getValue())

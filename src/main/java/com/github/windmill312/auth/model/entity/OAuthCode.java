@@ -14,7 +14,7 @@ public class OAuthCode {
 
     private Integer id;
     private String code = UUID.randomUUID().toString();
-    private String clientId;
+    private UUID clientId;
     private String userAccessToken;
     private Instant expiresIn;
 
@@ -47,11 +47,11 @@ public class OAuthCode {
     }
 
     @Column(name = "client_id", nullable = false)
-    public String getClientId() {
+    public UUID getClientId() {
         return clientId;
     }
 
-    public OAuthCode setClientId(String clientId) {
+    public OAuthCode setClientId(UUID clientId) {
         this.clientId = clientId;
         return this;
     }
